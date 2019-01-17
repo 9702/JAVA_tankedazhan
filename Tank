@@ -1,0 +1,342 @@
+package cn.tedu.game;
+
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.event.KeyEvent;
+import java.util.Random;
+
+public class Tank {
+	public static int speedX = 15, speedY = 10;
+	private static final int WIDTH = 35, HEIGHT = 35;
+	private int x, y, oldX, oldY;//设置初始值
+	public boolean live = true;	//生命值
+	private boolean good = false;
+	private Client client;
+	// 默认状态为静止
+	private Direction direction = Direction.STOP;
+	// 默认方向 向下
+	private Direction kDirection = Direction.D;
+	public int blood = 1000;
+	private static  Image[] images1 = null;
+	private static  Image[] images2 = null;
+	private static  Image[] images3 = null;
+	private static Toolkit tk = Toolkit.getDefaultToolkit();
+	private static Random r = new Random();
+	private int step = r.nextInt(10) + 5;
+	Client clients;
+	
+	private boolean pressUp, pressDown, pressLeft, pressRight,pressF;
+	private int temp = 0;
+
+	static {
+		images1 = new Image[] { tk.getImage(Tank.class.getClassLoader().getResource("Images/tankU.gif")),
+				tk.getImage(Tank.class.getClassLoader().getResource("Images/tankD.gif")),
+				tk.getImage(Tank.class.getClassLoader().getResource("Images/tankL.gif")),
+				tk.getImage(Tank.class.getClassLoader().getResource("Images/tankR.gif")) };
+	}
+	
+	static {
+		images2 = new Image[] { tk.getImage(Tank.class.getClassLoader().getResource("Images/player1_up.png")),
+				tk.getImage(Tank.class.getClassLoader().getResource("Images/player1_down.png")),
+				tk.getImage(Tank.class.getClassLoader().getResource("Images/player1_left.png")),
+				tk.getImage(Tank.class.getClassLoader().getResource("Images/player1_right.png")) };
+	}
+	static {
+		images3 = new Image[] { tk.getImage(Tank.class.getClassLoader().getResource("Images/bot_up.png")),
+				tk.getImage(Tank.class.getClassLoader().getResource("Images/bot_down.png")),
+				tk.getImage(Tank.class.getClassLoader().getResource("Images/bot_left.png")),
+				tk.getImage(Tank.class.getClassLoader().getResource("Images/bot_right.png")) };
+	}
+	public void draw(Graphics g) {
+	
+		if(good){
+			if (this.live) {
+				switch (kDirection) {
+				case U:
+					g.drawImage(images1[0], x, y, null);
+					break;
+				case D:
+					g.drawImage(images1[1], x, y, null);
+					break;
+				case L:
+					g.drawImage(images1[2], x, y, null);
+					break;
+				case R:
+					g.drawImage(images1[3], x, y, null);
+					break;
+				default:
+					break;
+				}
+			} else {
+				client.tank.remove(this);
+			}
+		}
+		else {
+			if (this.live ) {
+				if(clients.myTank.temp == 0) {
+					switch (kDirection) {
+					case U:
+						g.drawImage(images3[0], x, y, null);
+						break;
+					case D:
+						g.drawImage(images3[1], x, y, null);
+						break;
+					case L:
+						g.drawImage(images3[2], x, y, null);
+						break;
+					case R:
+						g.drawImage(images3[3], x, y, null);
+						break;
+					default:
+						break;
+					}
+				}else {
+							switch (kDirection) {
+							case U:
+								g.drawImage(images2[0], x, y, null);
+								break;
+							case D:
+								g.drawImage(images2[1], x, y, null);
+								break;
+							case L:
+								g.drawImage(images2[2], x, y, null);
+								break;
+							case R:
+								g.drawImage(images2[3], x, y, null);
+								break;
+							default:
+								break;
+							}
+						}
+				}
+			else {
+				client.tank.remove(this);
+			}
+		}
+		// 记录上一次的坐标
+		this.oldX = x;
+		this.oldY = y;
+		// 根据当前方向选择移动方向
+		switch (direction) {
+		case U:
+			y -= speedY;
+			break;
+		case D:
+			y += speedY;
+			break;
+		case L:
+			x -= speedX;
+			break;
+		case R:
+			x += speedX;
+			break;
+		default:
+			break;
+		}
+		// 判断是否超过边界
+		if (x + WIDTH > Client.WIDTH || x < 0) {
+			x = oldX;
+		}
+		if (y + HEIGHT > Client.HEIGHT || y < 70) {
+			y = oldY;
+		}
+		// 敌方坦克随机朝向
+		if (!good) {
+			if (step == 0) {
+				Direction[] ds = Direction.values();
+				int random = r.nextInt(ds.length);
+				step = r.nextInt(10) + 5;
+				direction = ds[random];
+			}
+			step--;
+			//产生随机数，控制敌人开火
+			if(r.nextInt(50)>40) {
+				this.fire();
+		}
+		if(direction != Direction.STOP) {
+			kDirection = direction;
+		}//如果图片的方向与前进的方向不一致就重新赋值
+		
+		}
+	}
+
+	public Tank(int x, int y, boolean good, Direction direction, Client client) {
+		super();
+		this.x = x;
+		this.y = y;
+		this.oldX = x;
+		this.oldY = y;
+		this.good = good;
+		//this.direction = direction;
+		this.kDirection = direction;
+		this.client = client;
+	}
+//	public Tank2(int x, int y, boolean good, Direction direction, Client client) {
+//		super();
+//		this.x = x;
+//		this.y = y;
+//		this.oldX = x;
+//		this.oldY = y;
+//		this.good = good;
+//		//this.direction = direction;
+//		this.kDirection = direction;
+//		this.client = client;
+//	}
+
+	public void keyPressed(KeyEvent e) {
+		int keycode = e.getKeyCode();
+		switch (keycode) {
+		case KeyEvent.VK_UP:
+			pressUp = true;
+			kDirection = direction.U;
+			break;
+		case KeyEvent.VK_DOWN:
+			pressDown = true;
+			kDirection = direction.D;
+			break;
+		case KeyEvent.VK_LEFT:
+			pressLeft = true;
+			kDirection = direction.L;
+			break;
+		case KeyEvent.VK_RIGHT:
+			pressRight = true;
+			kDirection = direction.R;
+			break;
+		case KeyEvent.VK_F:
+            fire();
+			break;
+		}
+		// 根据按键切换坦克方向
+		directionDirection();
+
+	}
+	public  void fire() {
+		int bx = x+WIDTH/2-Bullet.WIDTH/2;
+		int by = y+HEIGHT/2-Bullet.HEIGHT/2;
+		Bullet b = new Bullet(bx,by,live,good, client,kDirection);
+		client.bullets.add(b);
+	}
+
+	private void directionDirection() {
+		
+		if (pressUp && !pressDown && !pressLeft && !pressRight) {
+			direction = Direction.U;
+		}
+		if (pressDown && !pressUp && !pressLeft && !pressRight) {
+			direction = Direction.D;
+		}
+		if (pressLeft && !pressDown && !pressUp && !pressRight) {
+			direction = Direction.L;
+		}
+		if (pressRight && !pressDown && !pressLeft && !pressUp) {
+			direction = Direction.R;
+		}
+		if (!pressRight && !pressDown && !pressLeft && !pressUp) {
+			direction = Direction.STOP;
+		}
+	}
+
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		int keycode = e.getKeyCode();
+		switch (keycode) {
+		case KeyEvent.VK_UP:
+			pressUp = false;
+			break;
+		case KeyEvent.VK_DOWN:
+			pressDown = false;
+			break;
+		case KeyEvent.VK_LEFT:
+			pressLeft = false;
+			break;
+		case KeyEvent.VK_RIGHT:
+			pressRight = false;
+			break;
+		case KeyEvent.VK_F:
+			
+			break;
+		}
+		directionDirection();
+	}
+
+	// 判断坦克是否撞到普通墙
+	public boolean boomCommon() {
+		// 判断每一道墙是否撞上坦克
+		for (int i = 0; i < Client.commonWall.size(); i++) {
+			CommonWall cw = client.commonWall.get(i);
+			if (this.live && this.getRect().intersects(cw.getRect())) {
+				x = oldX;
+				y = oldY;
+				return true;
+			}
+		}
+		return false;
+	}
+
+//判断坦克是否撞到钢板墙
+	public boolean boomMetal() {
+		// 判断每一道墙是否撞上坦克
+		for (int i = 0; i < Client.metalWall.size(); i++) {
+			MetalWall mw = client.metalWall.get(i);
+			if (this.live && this.getRect().intersects(mw.getRect())) {
+				x = oldX;
+				y = oldY;
+				return true;
+			}
+		}
+		return false;
+	}
+//判断坦克是否撞到河流
+	public boolean boomRiver() {
+		// 判断河流是否撞上坦克
+		for (int i = 0; i < Client.river.size(); i++) {
+			River r = client.river.get(i);
+			if (this.live && this.getRect().intersects(r.getRect())) {
+				x = oldX;
+				y = oldY;
+				return true;
+			}
+		}
+		return false;
+	}
+//判断坦克是否撞到坦克
+	public boolean boomTank() {
+		// 判断每一道墙是否撞上坦克
+		for (int i = 0; i < Client.tank.size(); i++) {
+			Tank t = client.tank.get(i);
+			if (this.live && this!=t &&this.getRect().intersects(t.getRect())) {
+				x = oldX;
+				y = oldY;
+				return true;
+			}
+		}
+		return false;
+	}
+	public Rectangle getRect() {
+		return new Rectangle(x, y, WIDTH, HEIGHT);
+	}
+
+	public int getblood() {
+		// TODO Auto-generated method stub
+		return   blood; 
+		
+	}
+
+	public boolean isLive() {
+		// TODO Auto-generated method stub
+		return live;
+	}
+
+	public void setLive(boolean b) {
+		// TODO Auto-generated method stub
+		 this.live = live;
+	}
+
+	public void setBlood(int blood) {
+		this.blood = blood;
+	}
+     
+	
+}
