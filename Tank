@@ -73,9 +73,8 @@ public class Tank {
 				client.tank.remove(this);
 			}
 		}
-		else {
+		else  {
 			if (this.live ) {
-				if(clients.myTank.temp == 0) {
 					switch (kDirection) {
 					case U:
 						g.drawImage(images3[0], x, y, null);
@@ -93,28 +92,9 @@ public class Tank {
 						break;
 					}
 				}else {
-							switch (kDirection) {
-							case U:
-								g.drawImage(images2[0], x, y, null);
-								break;
-							case D:
-								g.drawImage(images2[1], x, y, null);
-								break;
-							case L:
-								g.drawImage(images2[2], x, y, null);
-								break;
-							case R:
-								g.drawImage(images2[3], x, y, null);
-								break;
-							default:
-								break;
-							}
-						}
+					client.tank.remove(this);
 				}
-			else {
-				client.tank.remove(this);
 			}
-		}
 		// 记录上一次的坐标
 		this.oldX = x;
 		this.oldY = y;
@@ -340,3 +320,4 @@ public class Tank {
      
 	
 }
+
