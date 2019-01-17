@@ -1,0 +1,404 @@
+package cn.tedu.game;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Menu;
+import java.awt.MenuBar;
+import java.awt.MenuItem;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JOptionPane;
+
+//坦克大战主入口
+
+public class Client extends Frame implements ActionListener{
+
+	
+	//定义程序窗口大小
+	public static final int WIDTH =648,HEIGHT = 792;
+	//定义菜单栏
+	MenuBar menu = null;
+	//定义菜单栏中的四个选项
+	Menu m1 = null,m2 = null, m3 = null, m4 = null;
+	//定义按钮的下拉框选项
+	MenuItem newGame = null,quit = null,pause = null,goon = null,
+	         lv1 = null, lv2 =null,lv3 = null, lv4 = null,explain = null,returns = null;
+    //创建家的对象
+    Home home = new Home(373,545,this,true);
+    //定义背景
+    Image screenImage = null;
+    //定义普通墙
+    static List<CommonWall> commonWall = new ArrayList();
+    public int temp = 0;
+    //定义树
+    List<Tree> tree = new ArrayList();
+    //定义金属墙
+    static List<MetalWall> metalWall = new ArrayList();
+    //定义河流
+    static List<River> river = new ArrayList();
+	//定义敌方坦克
+	static List<Tank> tank = new ArrayList();
+	//定义自己的坦克
+	Tank myTank = null;     
+    //定义子弹
+     List<Bullet> bullets = new ArrayList();
+    private static boolean isRun =true;
+     @Override 
+     public void update(Graphics g) {
+	//创建背景图
+	screenImage = this.createImage(WIDTH,HEIGHT);
+	//从背景图上获取画笔
+	Graphics gps = screenImage.getGraphics();
+	Color c = gps.getColor();
+	//给画笔设置颜色
+	gps.setColor(Color.gray);
+	//把背景化成灰色
+	gps.fillRect(0, 0, WIDTH, HEIGHT);
+	gps.setColor(c);
+	//画出自己家的图片
+	home.draw(gps);	
+	gps.setFont(new Font("幼圆",Font.ITALIC,20));
+	gps.drawString("剩余生命值", 500, 100);
+	gps.setFont(new Font("幼圆",Font.ITALIC,20));
+	gps.drawString(""+myTank.getblood(),600,100);
+	
+	if(!myTank.isLive()||!home.isLive()) {
+		gps.drawString("游戏结束", 300, 300);
+		gps.setFont(new Font("幼圆",Font.ITALIC,40));
+	
+	}
+	if(myTank.isLive()&&tank.isEmpty()) {
+		gps.drawString("通关成功", 300, 300);
+		gps.setFont(new Font("幼圆",Font.ITALIC,40));
+		isRun = false;
+	}
+	
+	//画墙
+	for(int i = 0;i <commonWall.size();i++) {
+		CommonWall cw = commonWall.get(i);
+		cw.draw(gps);
+	}
+	
+	//画金属墙
+	for(int i=0;i<metalWall.size();i++) {
+		MetalWall mw = metalWall.get(i);
+		mw.draw(gps);
+	}
+	//画河流
+	for(int i=0;i<river.size();i++) {
+		
+		River r = river.get(i);
+		r.draw(gps);
+	}
+	
+		//画敌人坦克
+	for(int i=0;i<tank.size();i++) {
+		tank.get(i).boomCommon();
+		tank.get(i).boomMetal();
+		tank.get(i).boomRiver();
+		tank.get(i).boomTank();
+		Tank t = tank.get(i);
+		t.draw(gps);
+	}
+
+	//画自己的坦克
+//	if()
+	myTank.boomCommon();
+	myTank.boomMetal();
+	myTank.boomRiver();
+	myTank.boomTank();
+	myTank.draw(gps);
+	//画子弹
+			for(int i=0;i<bullets.size();i++) {			
+				Bullet b = bullets.get(i);	
+				b.draw(gps);
+				b.hitMetal();
+				b.hitHome();
+				b.hitCommon();
+				b.hitTanks();
+				
+			}
+      //画树
+		for(int i=0;i <tree.size();i++) {
+			Tree t = tree.get(i);
+			t.draw(gps);
+		}
+    	//画出背景图
+	g.drawImage(screenImage, 0, 0, null);
+}  
+	public Client() {
+		//创建菜单栏
+		 menu = new MenuBar();
+		//创建菜单按钮
+		 m1 = new Menu("游戏");
+		 m2 = new Menu("进程");
+		 m3 = new Menu("游戏难度");
+		 m4 = new Menu("帮助");
+		 //菜单设置字体样式
+		 m1.setFont(new Font("幼圆",Font.BOLD,18));
+		 m2.setFont(new Font("幼圆",Font.BOLD,18));
+		 m3.setFont(new Font("幼圆",Font.BOLD,18));
+		 m4.setFont(new Font("幼圆",Font.BOLD,18));
+
+		 
+		//把菜单按钮添加到菜单栏		 
+		 menu.add(m1);
+		 menu.add(m2);
+		 menu.add(m3);
+		 menu.add(m4);
+		//创建下拉框按钮 
+		 newGame = new MenuItem("重新开始");
+		 returns = new MenuItem("主页面");
+		 quit = new MenuItem("退出游戏");
+		 pause = new MenuItem("暂停");
+		 goon = new MenuItem("继续");
+		 lv1 = new MenuItem("关卡一");
+		 lv2 = new MenuItem("关卡二");
+		 lv3 = new MenuItem("自定义地图"); 		 
+//		 lv4 = new MenuItem("关卡四");
+		 explain = new MenuItem("说明");
+		//向菜单按钮中添加下拉框 
+		 m1.add(returns);
+		 m1.add(newGame); 
+		 m1.add(quit);
+		 
+		 m2.add(pause);
+		 m2.add(goon);
+		 
+		 m3.add(lv1);
+		 m3.add(lv2);
+		 m3.add(lv3);
+//		 m3.add(lv4);
+		 
+		 m4.add(explain);
+		 
+		 //把菜单栏添加到窗口对象中
+		 this.setMenuBar(menu);
+		 //窗口可视化
+		 this.setVisible(true);
+		 //设置窗口位置
+		 this.setLocation(280, 80);
+		 //设置游戏标题
+		 this.setTitle("坦克大战");
+		 //设置窗口大小
+		 this.setSize(WIDTH,HEIGHT);
+		 //设置窗口大小不可更改 
+		 this.setResizable(false);
+		//添加窗口关闭监听（匿名内部类）
+ 
+		 
+		 this.addWindowListener(new WindowAdapter(){	     		 
+			 public void windowClosing(WindowEvent e) {
+				 System.exit(0);
+
+			 }
+		 });
+		 this.setBackground(Color.BLACK);
+		 //墙的布局
+		 for(int i =3;i<20;i++) {
+			 commonWall.add(new CommonWall(100+i*20,200,true,this));		 
+		 }
+		 for(int i =0;i<11;i++) {
+			 commonWall.add(new CommonWall(380,200-20*i,true,this));		 
+		 }
+		 for(int i=0;i<4;i++) {
+			commonWall.add(new CommonWall(343,580-20*i,true,this));		 			 
+		 }
+		 for(int i=0;i<5;i++) {
+				commonWall.add(new CommonWall(344+i*20,600,true,this));		 			 
+			 }
+		 for(int i=0;i<4;i++) {
+			 metalWall.add(new MetalWall(365+20*i,520,true,this));
+		 }//第二个
+		 for(int i=0;i<3;i++) {
+			 commonWall.add(new CommonWall(424,580-20*i,true,this));
+		 }
+		 for(int i=0;i<4;i++) {
+			 metalWall.add(new MetalWall(425,280-20*i,true,this));
+		 }//第三个
+		 for(int i=0;i<4;i++) {
+			 metalWall.add(new MetalWall(525,443-20*i,true,this));		 
+		 }//第四个
+		 for(int i=0;i<6;i++) {
+			 metalWall.add(new MetalWall(605,520-20*i,true,this));
+		 }//第五个
+		 for(int i=0;i<20;i++) {
+			 commonWall.add(new CommonWall(445+20*i,283,true,this));		 
+			 }
+	 for(int i=0;i<6;i++) {
+		 commonWall.add(new CommonWall(225,580-20*i,true,this));		 
+		 } 
+		 for(int i=0;i<13;i++) {
+			 metalWall.add(new MetalWall(125,580-20*i,true,this));		 
+		 }//第一个
+		 for(int i=0;i<10;i++) {
+			 commonWall.add(new CommonWall(100,20*i,true,this));		 
+		 } 
+		 for(int i=2;i<4;i++) {
+			 commonWall.add(new CommonWall(100*i,200,true,this));		 
+		 }//第一个
+		 for(int i=0;i<35;i++) {
+			 commonWall.add(new CommonWall(10*i+100,300,true,this));		 
+		 }//第二个
+		 
+	 //树的布局
+		 for(int i=0;i<10;i++) {
+			 tree.add(new Tree(445,303+20*i,true,this));		 
+		 }//第三棵树
+		 for(int i=0;i<10;i++) {
+			 tree.add(new Tree(545+20*i,400,true,this));		 
+		 }//第五颗树
+		 for(int i=0;i<10;i++) {
+			 tree.add(new Tree(625+20*i,527,true,this));		 
+		 }//第六颗树
+		 for(int i=0;i<10;i++) {
+			 tree.add(new Tree(435+20*i,150,true,this));		 
+		 }
+		 for(int i=0;i<10;i++) {
+			 tree.add(new Tree(145+20*i,350,true,this));		 
+		 }
+		 for(int i=0;i<11;i++) {
+			 tree.add(new Tree(145+20*i,150,true,this));		 
+		 }
+		 
+		 
+		//金属墙的布局
+		 for(int i=0;i<3;i++) {
+			 metalWall.add(new MetalWall(100*i+150,300,true,this));		 
+		 }//第二个
+		 for(int i=2;i<4;i++) {
+			 metalWall.add(new MetalWall(100*i,200,true,this));		 
+		 }//第一个
+		 for(int i=0;i<4;i++) {
+			 metalWall.add(new MetalWall(650,140+20*i,true,this));		 
+		 }
+		 //河流的布局
+		 for(int i=0;i<2;i++) {
+			 river.add(new River(35*i,200,true,this));		 
+		 }
+		 for(int i=0;i<2;i++) {
+			 river.add(new River(480,483-20*i,true,this));		 
+		 }
+		 //敌方坦克布局
+		 for(int i=0;i<10;i++) {
+			 tank.add(new Tank(i*40,70,false,Direction.D,this));
+		 }
+		 	 //我方坦克
+		     myTank = new Tank(300,535,true,Direction.U,this);
+		     //给窗口添加键盘监听
+		     this.addKeyListener(new MyAdapter());
+		     //给暂停按钮添加监听事件
+		     pause.addActionListener(this);
+		     pause.setActionCommand("PAUSE");
+	                	  
+		     returns.addActionListener(this);
+		     returns.setActionCommand("returns");
+		     
+		     goon.addActionListener(this);
+		     goon.setActionCommand("GOON");
+		     
+		     newGame.addActionListener(this);
+		     newGame.setActionCommand("NEWGAME");
+		     
+		     lv2.addActionListener(this);
+		     lv2.setActionCommand("lv2");
+		     
+		     lv3.addActionListener(this);
+		     lv3.setActionCommand("lv3");
+		     
+		     explain.addActionListener(this);
+		     explain.setActionCommand("EXPLAIN");
+		     
+		     quit.addActionListener(this);
+		     quit.setActionCommand("QUIT");
+	
+		 new MyThread ().start();
+	 }
+	private class MyThread extends Thread{
+		@Override
+		public void run() {
+			while(isRun) {
+				repaint();
+				
+		 try {
+			 Thread.sleep(100);
+			 
+		 }catch(InterruptedException e) {
+			 e.printStackTrace();
+		 }
+			}
+		}
+	}
+	//监听键盘按下时的操作
+	 private class MyAdapter extends KeyAdapter{
+		 public void keyPressed(KeyEvent e) {
+			// TODO Auto-generated method stub
+          myTank.keyPressed(e);
+		}
+    //监听键盘释放时的操作
+		 public void keyReleased(KeyEvent e) {
+		 	// TODO Auto-generated method stub
+         myTank.keyReleased(e);
+		}
+	 }
+
+	public static void main(String[] args) {
+		new Client();
+		
+	 }
+	//栏目功能设置
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		String code = e.getActionCommand();
+		if("PAUSE".equals(code)) {
+			isRun = false;
+		}
+		if("returns".equals(code)) {
+			isRun = false;
+//			new ;
+		}
+		if("GOON".equals(code)) {
+			isRun = true;
+			new MyThread().start();
+		}
+		if("NEWGAME".equals(code)) {
+			//关闭窗口，并释放相关资源
+			this.dispose();
+			//创建新一轮游戏
+	       new Client();
+		}
+		if("lv2".equals(code)) {
+			this.dispose();
+			Tank.speedX = 10;
+			Tank.speedY = 10;
+			this.temp = 1;
+			new Client();
+		}
+		if("lv3".equals(code)) {
+			this.dispose();
+			Tank.speedX += 10;
+			Tank.speedY += 10;
+			new Client();
+		}
+		if("EXPLAIN".equals(code)) {
+			isRun = false;
+			JOptionPane.showMessageDialog(null,"按上下左右移动，按F开炮","温馨提示", JOptionPane.INFORMATION_MESSAGE);
+			isRun = true;
+			new MyThread().start();
+		}
+		if("QUIT".equals(code)) {
+			System.exit(0);
+		}
+	}
+	 }
